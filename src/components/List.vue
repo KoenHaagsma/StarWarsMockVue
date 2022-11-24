@@ -1,32 +1,50 @@
 <template>
-    <ul v-for="person in peoples" :key="person.name">
-        <li>
-            <h2>{{ person.name }}</h2>
-        </li>
-    </ul>
+    <div v-if="!loading">
+        <ul v-for="person in peoples" :key="person.name">
+            <li>
+                <h2>{{ person.name }}</h2>
+            </li>
+        </ul>
+    </div>
+    <div v-else><p>...Loading</p></div>
 </template>
 
 <script lang="ts">
-const url = 'https://swapi.dev/api/people/';
+const url = 'https://swapi.dev/api/people';
 export default {
-    data(): Persons {
+    data(): dataProps {
         return {
             peoples: [],
+            loading: false,
+            error: false,
         };
     },
     async mounted() {
-        try {
-            const response = await fetch(url);
-            this.peoples = await response.json();
-        } catch (e: any) {
-            console.warn(e.message);
-        }
+        this.peoples = (await this.getPeople(url)).results;
+    },
+    methods: {
+        async getPeople(url: string) {
+            this.error = false;
+            this.loading = true;
+            try {
+                const res = await fetch(url);
+                const results = await res.json();
+                return results;
+            } catch (err) {
+                this.error = true;
+                console.error(err);
+            } finally {
+                this.loading = false;
+            }
+        },
     },
 };
 
-interface Persons {
+type dataProps = {
     peoples: Person[];
-}
+    loading: boolean;
+    error: boolean;
+};
 
 type Person = {
     name: string;
